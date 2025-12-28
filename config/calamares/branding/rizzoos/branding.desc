@@ -1,0 +1,40 @@
+# ===========================================
+# RizzoOS - Branding Calamares
+# ===========================================
+
+---
+componentName: rizzoos
+
+strings:
+    productName:         "RizzoOS"
+    shortProductName:    "RizzoOS"
+    version:             "1.0"
+    shortVersion:        "1.0"
+    versionedName:       "RizzoOS 1.0"
+    shortVersionedName:  "RizzoOS 1.0"
+    bootloaderEntryName: "RizzoOS"
+    productUrl:          "https://github.com/arnaud/rizzoos"
+    supportUrl:          "https://github.com/arnaud/rizzoos/issues"
+    knownIssuesUrl:      "https://github.com/arnaud/rizzoos/issues"
+    releaseNotesUrl:     "https://github.com/arnaud/rizzoos/releases"
+    donateUrl:           ""
+
+images:
+    productBanner:       "banner.png"
+    productIcon:         "logo.png"
+    productLogo:         "logo.png"
+    productWallpaper:    "wallpaper.png"
+    productWelcome:      "welcome.png"
+
+slideshowAPI: 2
+
+slideshow:
+    - slide1.png
+    - slide2.png
+    - slide3.png
+
+style:
+    SidebarBackground:        "#1a1a2e"
+    SidebarText:              "#FFFFFF"
+    SidebarTextCurrent:       "#58b5f0"
+    SidebarBackgroundCurrent: "#2d2d44"

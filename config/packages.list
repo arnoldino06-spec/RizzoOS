@@ -1,0 +1,158 @@
+# ===========================================
+# RizzoOS - Liste des paquets
+# ===========================================
+
+# --- Système de base ---
+linux-image-amd64
+linux-headers-amd64
+firmware-linux
+firmware-linux-nonfree
+firmware-misc-nonfree
+intel-microcode
+amd64-microcode
+
+# --- KDE Plasma Desktop ---
+kde-plasma-desktop
+plasma-workspace
+plasma-nm
+plasma-pa
+powerdevil
+bluedevil
+kde-spectacle
+dolphin
+konsole
+kate
+ark
+gwenview
+okular
+kcalc
+kinfocenter
+kscreen
+sddm
+sddm-theme-breeze
+
+# --- Thèmes et apparence ---
+breeze
+breeze-gtk-theme
+breeze-icon-theme
+kde-config-gtk-style
+kde-config-gtk-style-preview
+papirus-icon-theme
+fonts-noto
+fonts-noto-cjk
+fonts-liberation
+fonts-dejavu
+
+# --- Réseau ---
+network-manager
+network-manager-gnome
+network-manager-openvpn
+network-manager-vpnc
+wireguard
+wireguard-tools
+openvpn
+curl
+wget
+openssh-client
+rsync
+
+# --- Sécurité ---
+ufw
+gufw
+fail2ban
+apparmor
+apparmor-utils
+apparmor-profiles
+cryptsetup
+cryptsetup-initramfs
+gnupg
+keepassxc
+
+# --- Multimédia ---
+vlc
+vlc-plugin-base
+gimp
+gimp-plugin-registry
+kdenlive
+obs-studio
+audacity
+ffmpeg
+gstreamer1.0-plugins-base
+gstreamer1.0-plugins-good
+gstreamer1.0-plugins-bad
+gstreamer1.0-plugins-ugly
+gstreamer1.0-libav
+gstreamer1.0-vaapi
+
+# --- Bureautique ---
+libreoffice
+libreoffice-kde5
+libreoffice-l10n-fr
+hunspell-fr
+thunderbird
+thunderbird-l10n-fr
+
+# --- Navigateurs ---
+firefox-esr
+firefox-esr-l10n-fr
+chromium
+
+# --- Développement ---
+git
+build-essential
+cmake
+pkg-config
+python3
+python3-pip
+python3-venv
+nodejs
+npm
+
+# --- Wine et compatibilité Windows ---
+wine64
+wine32:i386
+winetricks
+playonlinux
+q4wine
+
+# --- Utilitaires système ---
+htop
+neofetch
+inxi
+lm-sensors
+smartmontools
+gparted
+timeshift
+flatpak
+plasma-discover-backend-flatpak
+snapd
+
+# --- Compression ---
+zip
+unzip
+p7zip-full
+unrar
+
+# --- Impression ---
+cups
+cups-pdf
+system-config-printer
+printer-driver-all
+
+# --- Bluetooth ---
+bluez
+bluez-tools
+
+# --- Son ---
+pipewire
+pipewire-audio
+pipewire-pulse
+wireplumber
+pavucontrol
+
+# --- Langue française ---
+locales
+console-setup
+keyboard-configuration
+task-french
+task-french-desktop

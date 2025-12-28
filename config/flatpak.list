@@ -1,0 +1,47 @@
+# ===========================================
+# RizzoOS - Applications Flatpak
+# ===========================================
+# Ces applications seront installées via Flatpak
+# pour des mises à jour indépendantes du système
+
+# --- Développement ---
+com.visualstudio.code
+com.jetbrains.IntelliJ-IDEA-Community
+org.gnome.meld
+
+# --- Gaming ---
+com.valvesoftware.Steam
+net.lutris.Lutris
+com.heroicgameslauncher.hgl
+org.freedesktop.Platform.VulkanLayer.MangoHud
+com.github.Matoking.protontricks
+
+# --- Communication ---
+org.signal.Signal
+com.discordapp.Discord
+org.telegram.desktop
+us.zoom.Zoom
+
+# --- Multimédia ---
+org.videolan.VLC
+org.gimp.GIMP
+org.kde.kdenlive
+com.obsproject.Studio
+org.audacityteam.Audacity
+org.blender.Blender
+com.spotify.Client
+
+# --- Productivité ---
+md.obsidian.Obsidian
+org.onlyoffice.desktopeditors
+com.notion.Notion
+
+# --- Utilitaires ---
+com.github.tchx84.Flatseal
+io.github.flattool.Warehouse
+org.qbittorrent.qBittorrent
+com.usebottles.bottles
+
+# --- Navigateurs (backup) ---
+org.mozilla.firefox
+com.brave.Browser
