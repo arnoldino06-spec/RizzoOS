@@ -151,4 +151,4 @@ RizzoOS est distribué sous licence GPL v3.
 Les composants individuels conservent leurs licences respectives.
 
 ---
-**RizzoOS** - Créé par Arnaud | Valais, Suisse 🇨🇭
+**RizzoOS** - Créé par Arnaud 🇫🇷 | Valais, Suisse 🇨🇭
