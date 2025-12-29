@@ -21,8 +21,22 @@ sudo mount -t sysfs sysfs "$WORK_DIR/chroot/sys"
 sudo chroot "$WORK_DIR/chroot" /bin/bash << 'CHROOT'
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y linux-image-amd64 live-boot systemd-sysv
+apt-get install -y linux-image-amd64 live-boot systemd-sysv sudo
 apt-get install -y kde-plasma-desktop sddm dolphin konsole
+
+# Créer utilisateur rizzo
+useradd -m -s /bin/bash -G sudo,audio,video,cdrom,plugdev rizzo
+echo "rizzo:rizzo" | chpasswd
+echo "root:root" | chpasswd
+
+# Autologin
+mkdir -p /etc/sddm.conf.d
+cat > /etc/sddm.conf.d/autologin.conf << 'SDDM'
+[Autologin]
+User=rizzo
+Session=plasma
+SDDM
+
 apt-get clean
 CHROOT
 
