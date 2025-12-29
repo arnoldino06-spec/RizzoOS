@@ -1,0 +1,30 @@
+name: Build RizzoOS ISO
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin mtools
+          
+      - name: Build ISO
+        run: |
+          chmod +x scripts/*.sh
+          sudo ./scripts/build-iso.sh
+          
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: RizzoOS-ISO
+          path: iso/*.iso
