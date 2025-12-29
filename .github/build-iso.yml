@@ -14,9 +14,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y debootstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin mtools
           
-      - name: Show build script
-        run: cat scripts/build-iso.sh
-        
       - name: Build ISO
         run: |
           chmod +x scripts/build-iso.sh
