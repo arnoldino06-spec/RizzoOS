@@ -21,7 +21,6 @@ sudo mount -t sysfs sysfs "$WORK_DIR/chroot/sys"
 sudo chroot "$WORK_DIR/chroot" /bin/bash << 'CHROOT'
 export DEBIAN_FRONTEND=noninteractive
 
-# Ajouter i386 pour Wine
 dpkg --add-architecture i386
 apt-get update
 
@@ -92,8 +91,18 @@ systemctl enable apparmor
 ufw default deny incoming
 ufw default allow outgoing
 
-# === THÈME SOMBRE PAR DÉFAUT ===
+# === FORCER RENDU LOGICIEL KWIN (évite les crashs en VM) ===
 mkdir -p /home/rizzo/.config
+cat > /home/rizzo/.config/kwinrc << 'KWIN'
+[Compositing]
+Backend=XRender
+Enabled=true
+GLCore=false
+OpenGLIsUnsafe=true
+WindowsBlockCompositing=false
+KWIN
+
+# === THÈME SOMBRE PAR DÉFAUT ===
 cat > /home/rizzo/.config/kdeglobals << 'THEME'
 [General]
 ColorScheme=BreezeDark
@@ -101,9 +110,19 @@ ColorScheme=BreezeDark
 [KDE]
 LookAndFeelPackage=org.kde.breezedark.desktop
 THEME
+
+# === DÉSACTIVER EFFETS 3D ===
+cat > /home/rizzo/.config/kwineffectsrc << 'EFFECTS'
+[Plugins]
+blurEnabled=false
+contrastEnabled=false
+slidingpopupsEnabled=false
+EFFECTS
+
 chown -R 1000:1000 /home/rizzo
 
 # === MESSAGE DE BIENVENUE ===
+mkdir -p /home/rizzo/Desktop
 cat > /home/rizzo/Desktop/Bienvenue.txt << 'WELCOME'
 Bienvenue sur RizzoOS 1.0 (Valais) !
 
@@ -123,7 +142,6 @@ Logiciels inclus :
 
 Bonne utilisation !
 WELCOME
-mkdir -p /home/rizzo/Desktop
 chown -R 1000:1000 /home/rizzo
 
 apt-get clean
