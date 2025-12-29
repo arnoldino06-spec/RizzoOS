@@ -42,7 +42,11 @@ apt-get install -y \
     firmware-atheros \
     firmware-amd-graphics \
     intel-microcode \
-    amd64-microcode
+    amd64-microcode \
+    grub-pc \
+    grub-efi-amd64 \
+    os-prober \
+    efibootmgr
 
 # ============================================
 # === KDE PLASMA COMPLET ===
@@ -72,6 +76,18 @@ apt-get install -y \
     kde-config-sddm \
     breeze-icon-theme \
     papirus-icon-theme
+
+# ============================================
+# === CALAMARES (Installateur) ===
+# ============================================
+apt-get install -y \
+    calamares \
+    calamares-settings-debian \
+    qml-module-qtquick2 \
+    qml-module-qtquick-controls \
+    qml-module-qtquick-controls2 \
+    qml-module-qtquick-layouts \
+    qml-module-qtquick-window2 || true
 
 # ============================================
 # === NAVIGATEURS ===
@@ -140,6 +156,183 @@ apt-get install -y \
     python3-pip \
     nodejs \
     npm || true
+
+# ============================================
+# === SERVEUR WEB LAMP ===
+# ============================================
+apt-get install -y \
+    apache2 \
+    mariadb-server \
+    mariadb-client \
+    php \
+    php-mysql \
+    php-curl \
+    php-gd \
+    php-mbstring \
+    php-xml \
+    php-xmlrpc \
+    php-soap \
+    php-intl \
+    php-zip \
+    php-cli \
+    php-common \
+    php-opcache \
+    php-readline \
+    libapache2-mod-php
+
+# ============================================
+# === PHPMYADMIN ===
+# ============================================
+echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/admin-pass password root" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/app-pass password root" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/app-password-confirm password root" | debconf-set-selections
+apt-get install -y phpmyadmin || true
+ln -sf /usr/share/phpmyadmin /var/www/html/phpmyadmin || true
+
+# ============================================
+# === RIZZOBROWSER (Navigateur RizzoOS) ===
+# ============================================
+apt-get install -y python3-pyqt5 python3-pyqt5.qtwebengine
+
+cat > /usr/local/bin/rizzobrowser << 'BROWSER'
+#!/usr/bin/env python3
+import sys
+from PyQt5.QtCore import QUrl, Qt
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QToolBar, 
+    QLineEdit, QAction, QTabWidget, QWidget, QVBoxLayout, QStatusBar)
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtGui import QIcon
+
+class Browser(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("RizzoBrowser")
+        self.setGeometry(100, 100, 1400, 900)
+        
+        self.tabs = QTabWidget()
+        self.tabs.setTabsClosable(True)
+        self.tabs.tabCloseRequested.connect(self.close_tab)
+        self.tabs.currentChanged.connect(self.tab_changed)
+        self.setCentralWidget(self.tabs)
+        
+        navbar = QToolBar("Navigation")
+        navbar.setMovable(False)
+        self.addToolBar(navbar)
+        
+        back_btn = QAction("◀", self)
+        back_btn.triggered.connect(lambda: self.current_browser().back())
+        navbar.addAction(back_btn)
+        
+        forward_btn = QAction("▶", self)
+        forward_btn.triggered.connect(lambda: self.current_browser().forward())
+        navbar.addAction(forward_btn)
+        
+        reload_btn = QAction("⟳", self)
+        reload_btn.triggered.connect(lambda: self.current_browser().reload())
+        navbar.addAction(reload_btn)
+        
+        home_btn = QAction("🏠", self)
+        home_btn.triggered.connect(self.go_home)
+        navbar.addAction(home_btn)
+        
+        self.url_bar = QLineEdit()
+        self.url_bar.returnPressed.connect(self.navigate)
+        navbar.addWidget(self.url_bar)
+        
+        new_tab_btn = QAction("+", self)
+        new_tab_btn.triggered.connect(lambda: self.add_tab())
+        navbar.addAction(new_tab_btn)
+        
+        self.status = QStatusBar()
+        self.setStatusBar(self.status)
+        
+        self.add_tab()
+        
+        self.setStyleSheet("""
+            QMainWindow { background-color: #1a1a2e; }
+            QToolBar { background-color: #16213e; border: none; padding: 5px; }
+            QLineEdit { 
+                background-color: #0f3460; 
+                color: white; 
+                border: 2px solid #00d4ff;
+                border-radius: 15px;
+                padding: 8px 15px;
+                font-size: 14px;
+                min-width: 400px;
+            }
+            QLineEdit:focus { border-color: #00ff88; }
+            QTabWidget::pane { border: none; }
+            QTabBar::tab {
+                background-color: #16213e;
+                color: white;
+                padding: 10px 20px;
+                margin-right: 2px;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+            }
+            QTabBar::tab:selected { background-color: #0f3460; }
+            QStatusBar { background-color: #16213e; color: #00d4ff; }
+        """)
+    
+    def add_tab(self, url="https://duckduckgo.com"):
+        browser = QWebEngineView()
+        browser.setUrl(QUrl(url))
+        browser.urlChanged.connect(self.update_url)
+        browser.titleChanged.connect(lambda title: self.tabs.setTabText(
+            self.tabs.indexOf(browser), title[:20] + "..." if len(title) > 20 else title))
+        i = self.tabs.addTab(browser, "Nouvel onglet")
+        self.tabs.setCurrentIndex(i)
+        return browser
+    
+    def current_browser(self):
+        return self.tabs.currentWidget()
+    
+    def navigate(self):
+        url = self.url_bar.text()
+        if not url.startswith("http"):
+            if "." in url:
+                url = "https://" + url
+            else:
+                url = f"https://duckduckgo.com/?q={url}"
+        self.current_browser().setUrl(QUrl(url))
+    
+    def update_url(self, url):
+        self.url_bar.setText(url.toString())
+        self.status.showMessage(url.toString())
+    
+    def go_home(self):
+        self.current_browser().setUrl(QUrl("https://duckduckgo.com"))
+    
+    def close_tab(self, i):
+        if self.tabs.count() > 1:
+            self.tabs.removeTab(i)
+        else:
+            self.close()
+    
+    def tab_changed(self, i):
+        if self.current_browser():
+            self.update_url(self.current_browser().url())
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    app.setApplicationName("RizzoBrowser")
+    window = Browser()
+    window.show()
+    sys.exit(app.exec_())
+BROWSER
+chmod +x /usr/local/bin/rizzobrowser
+
+cat > /usr/share/applications/rizzobrowser.desktop << 'MENU'
+[Desktop Entry]
+Name=RizzoBrowser
+Comment=Navigateur Web RizzoOS
+Exec=/usr/local/bin/rizzobrowser
+Icon=web-browser
+Type=Application
+Categories=Network;WebBrowser;
+MENU
 
 # ============================================
 # === OUTILS SYSTÈME ===
@@ -217,16 +410,199 @@ apt-get update
 apt-get install -y waydroid || true
 
 # ============================================
-# === CRÉER UTILISATEUR ===
+# === UTILISATEUR LIVE (temporaire) ===
 # ============================================
-useradd -m -s /bin/bash -G sudo,audio,video,cdrom,plugdev,netdev,bluetooth,lpadmin rizzo
-echo "rizzo:rizzo" | chpasswd
-echo "root:root" | chpasswd
+useradd -m -s /bin/bash -G sudo,audio,video,cdrom,plugdev,netdev,bluetooth,lpadmin,www-data live
+echo "live:live" | chpasswd
+echo "live ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # ============================================
-# === SUPPRIMER TOUT BRANDING DEBIAN ===
+# === CONFIG CALAMARES ===
 # ============================================
+mkdir -p /etc/calamares/branding/rizzoos
+mkdir -p /etc/calamares/modules
 
+# Config principale Calamares
+cat > /etc/calamares/settings.conf << 'CALA'
+modules-search: [ local, /usr/lib/calamares/modules ]
+
+sequence:
+  - show:
+    - welcome
+    - locale
+    - keyboard
+    - partition
+    - users
+    - summary
+  - exec:
+    - partition
+    - mount
+    - unpackfs
+    - machineid
+    - fstab
+    - locale
+    - keyboard
+    - localecfg
+    - users
+    - displaymanager
+    - networkcfg
+    - hwclock
+    - services-systemd
+    - bootloader
+    - umount
+  - show:
+    - finished
+
+branding: rizzoos
+
+prompt-install: true
+dont-chroot: false
+CALA
+
+# Branding RizzoOS pour Calamares
+cat > /etc/calamares/branding/rizzoos/branding.desc << 'BRAND'
+componentName: rizzoos
+welcomeStyleCalamares: true
+strings:
+    productName:         "RizzoOS"
+    shortProductName:    "RizzoOS"
+    version:             "1.0"
+    shortVersion:        "1.0"
+    versionedName:       "RizzoOS 1.0"
+    shortVersionedName:  "RizzoOS 1.0"
+    bootloaderEntryName: "RizzoOS"
+    productUrl:          "https://rizzoos.com"
+    supportUrl:          "https://rizzoos.com/support"
+    knownIssuesUrl:      "https://rizzoos.com/issues"
+    releaseNotesUrl:     "https://rizzoos.com/releases"
+
+images:
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "welcome.png"
+
+slideshow:               "show.qml"
+
+style:
+   sidebarBackground:    "#1a1a2e"
+   sidebarText:          "#FFFFFF"
+   sidebarTextSelect:    "#00d4ff"
+BRAND
+
+# Slideshow simple
+cat > /etc/calamares/branding/rizzoos/show.qml << 'QML'
+import QtQuick 2.0;
+import calamares.slideshow 1.0;
+
+Presentation {
+    id: presentation
+
+    Slide {
+        Rectangle {
+            anchors.fill: parent
+            color: "#1a1a2e"
+            
+            Text {
+                anchors.centerIn: parent
+                text: "Bienvenue sur RizzoOS 1.0\n\nInstallation en cours..."
+                color: "#00d4ff"
+                font.pixelSize: 32
+                horizontalAlignment: Text.AlignHCenter
+            }
+        }
+    }
+}
+QML
+
+# Module unpackfs
+cat > /etc/calamares/modules/unpackfs.conf << 'UNPACK'
+unpack:
+  - source: /run/live/medium/live/filesystem.squashfs
+    sourcefs: squashfs
+    destination: ""
+UNPACK
+
+# Module displaymanager
+cat > /etc/calamares/modules/displaymanager.conf << 'DM'
+displaymanagers:
+  - sddm
+  
+defaultDesktopEnvironment:
+    executable: "startplasma-x11"
+    desktopFile: "plasma"
+    
+basicSetup: false
+UNPACK
+
+# Module bootloader
+cat > /etc/calamares/modules/bootloader.conf << 'BOOT'
+efiBootLoader: "grub"
+kernel: "/vmlinuz"
+img: "/initrd.img"
+timeout: 10
+grubInstall: "grub-install"
+grubMkconfig: "grub-mkconfig"
+grubCfg: "/boot/grub/grub.cfg"
+grubProbe: "grub-probe"
+efiBootloaderId: "RizzoOS"
+BOOT
+
+# Module users
+cat > /etc/calamares/modules/users.conf << 'USERS'
+defaultGroups:
+    - sudo
+    - audio
+    - video
+    - cdrom
+    - plugdev
+    - netdev
+    - bluetooth
+    - lpadmin
+    - www-data
+
+autologinGroup: autologin
+doAutologin: false
+sudoersGroup: sudo
+setRootPassword: true
+doReusePassword: true
+USERS
+
+# Module welcome
+cat > /etc/calamares/modules/welcome.conf << 'WELCOME'
+showSupportUrl: true
+showKnownIssuesUrl: true
+showReleaseNotesUrl: true
+
+requirements:
+    requiredStorage: 10
+    requiredRam: 2.0
+    internetCheckUrl: https://google.com
+    check:
+        - storage
+        - ram
+        - root
+    required:
+        - storage
+        - ram
+        - root
+WELCOME
+
+# Module locale
+cat > /etc/calamares/modules/locale.conf << 'LOCALE'
+region: "Europe"
+zone: "Zurich"
+LOCALE
+
+# Module keyboard
+cat > /etc/calamares/modules/keyboard.conf << 'KEYBOARD'
+xOrgConfFileName: "/etc/X11/xorg.conf.d/00-keyboard.conf"
+convertedKeymapPath: "/lib/kbd/keymaps/xkb"
+writeEtcDefaultKeyboard: true
+KEYBOARD
+
+# ============================================
+# === BRANDING RIZZOOS ===
+# ============================================
 cat > /etc/os-release << 'OSREL'
 PRETTY_NAME="RizzoOS 1.0"
 NAME="RizzoOS"
@@ -269,20 +645,89 @@ cat > /etc/motd << 'MOTD'
 
   Bienvenue sur RizzoOS 1.0 !
   
-  Utilisateur : rizzo | Mot de passe : rizzo
+  Mode Live - Pour installer, cliquez sur "Installer RizzoOS" sur le bureau
   
-  Tapez 'neofetch' pour les infos système
-  Tapez 'waydroid' pour lancer Android
+  rizzobrowser          → Navigateur RizzoOS
+  waydroid              → Android
+  http://localhost      → Serveur Web
 
 MOTD
 
 # ============================================
-# === AUTOLOGIN SDDM ===
+# === PAGE D'ACCUEIL APACHE ===
+# ============================================
+cat > /var/www/html/index.html << 'APACHE'
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RizzoOS - Serveur Web</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p { font-size: 1.2em; margin: 20px 0; color: #ccc; }
+        .links { margin-top: 30px; }
+        .links a {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 30px;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            color: #1a1a2e;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .links a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,212,255,0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 RizzoOS</h1>
+        <p>Votre serveur web est opérationnel !</p>
+        <div class="links">
+            <a href="/phpmyadmin">📊 phpMyAdmin</a>
+            <a href="https://rizzoos.com">🌐 Site RizzoOS</a>
+        </div>
+    </div>
+</body>
+</html>
+APACHE
+
+# ============================================
+# === AUTOLOGIN SDDM (Mode Live) ===
 # ============================================
 mkdir -p /etc/sddm.conf.d
 cat > /etc/sddm.conf.d/autologin.conf << 'SDDM'
 [Autologin]
-User=rizzo
+User=live
 Session=plasma
 
 [Theme]
@@ -292,9 +737,9 @@ SDDM
 # ============================================
 # === CONFIG KDE PLASMA ===
 # ============================================
-mkdir -p /home/rizzo/.config
+mkdir -p /home/live/.config
 
-cat > /home/rizzo/.config/kwinrc << 'KWIN'
+cat > /home/live/.config/kwinrc << 'KWIN'
 [Compositing]
 Backend=XRender
 Enabled=true
@@ -303,7 +748,7 @@ OpenGLIsUnsafe=true
 WindowsBlockCompositing=false
 KWIN
 
-cat > /home/rizzo/.config/kdeglobals << 'THEME'
+cat > /home/live/.config/kdeglobals << 'THEME'
 [General]
 ColorScheme=BreezeDark
 Name=Breeze Dark
@@ -317,7 +762,7 @@ LookAndFeelPackage=org.kde.breezedark.desktop
 widgetStyle=breeze
 THEME
 
-cat > /home/rizzo/.config/kwineffectsrc << 'EFFECTS'
+cat > /home/live/.config/kwineffectsrc << 'EFFECTS'
 [Plugins]
 blurEnabled=false
 contrastEnabled=false
@@ -325,7 +770,7 @@ slidingpopupsEnabled=false
 translucencyEnabled=false
 EFFECTS
 
-cat > /home/rizzo/.config/plasmarc << 'PLASMA'
+cat > /home/live/.config/plasmarc << 'PLASMA'
 [Theme]
 name=breeze-dark
 PLASMA
@@ -333,9 +778,30 @@ PLASMA
 # ============================================
 # === RACCOURCIS BUREAU ===
 # ============================================
-mkdir -p /home/rizzo/Desktop
+mkdir -p /home/live/Desktop
 
-cat > /home/rizzo/Desktop/firefox.desktop << 'FF'
+# INSTALLATEUR RIZZOOS
+cat > /home/live/Desktop/install-rizzoos.desktop << 'INSTALL'
+[Desktop Entry]
+Name=Installer RizzoOS
+Comment=Installer RizzoOS sur votre ordinateur
+Exec=sudo calamares
+Icon=system-software-install
+Type=Application
+Terminal=false
+Categories=System;
+INSTALL
+
+cat > /home/live/Desktop/rizzobrowser.desktop << 'RBROWSER'
+[Desktop Entry]
+Name=RizzoBrowser
+Comment=Navigateur Web RizzoOS
+Exec=/usr/local/bin/rizzobrowser
+Icon=web-browser
+Type=Application
+RBROWSER
+
+cat > /home/live/Desktop/firefox.desktop << 'FF'
 [Desktop Entry]
 Name=Firefox
 Exec=firefox-esr
@@ -343,7 +809,7 @@ Icon=firefox-esr
 Type=Application
 FF
 
-cat > /home/rizzo/Desktop/dolphin.desktop << 'DOLPHIN'
+cat > /home/live/Desktop/dolphin.desktop << 'DOLPHIN'
 [Desktop Entry]
 Name=Fichiers
 Exec=dolphin
@@ -351,7 +817,7 @@ Icon=system-file-manager
 Type=Application
 DOLPHIN
 
-cat > /home/rizzo/Desktop/konsole.desktop << 'KONSOLE'
+cat > /home/live/Desktop/konsole.desktop << 'KONSOLE'
 [Desktop Entry]
 Name=Terminal
 Exec=konsole
@@ -359,7 +825,7 @@ Icon=utilities-terminal
 Type=Application
 KONSOLE
 
-cat > /home/rizzo/Desktop/wine.desktop << 'WINE'
+cat > /home/live/Desktop/wine.desktop << 'WINE'
 [Desktop Entry]
 Name=Wine Config
 Exec=winecfg
@@ -367,16 +833,23 @@ Icon=wine
 Type=Application
 WINE
 
-cat > /home/rizzo/Desktop/waydroid.desktop << 'WAYDROID'
+cat > /home/live/Desktop/waydroid.desktop << 'WAYDROID'
 [Desktop Entry]
 Name=Android (Waydroid)
-Comment=Lancer apps Android
 Exec=waydroid show-full-ui
 Icon=waydroid
 Type=Application
 WAYDROID
 
-cat > /home/rizzo/Desktop/Bienvenue.txt << 'WELCOME'
+cat > /home/live/Desktop/phpmyadmin.desktop << 'PMA'
+[Desktop Entry]
+Name=phpMyAdmin
+Exec=firefox-esr http://localhost/phpmyadmin
+Icon=mysql-workbench
+Type=Application
+PMA
+
+cat > /home/live/Desktop/Bienvenue.txt << 'WELCOME'
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
 ║   ██████╗ ██╗███████╗███████╗ ██████╗  ██████╗ ███████╗   ║
@@ -390,37 +863,40 @@ cat > /home/rizzo/Desktop/Bienvenue.txt << 'WELCOME'
 ║                                                           ║
 ╠═══════════════════════════════════════════════════════════╣
 ║                                                           ║
-║   IDENTIFIANTS                                            ║
-║   Utilisateur : rizzo | Mot de passe : rizzo              ║
+║   🔧 INSTALLATION                                         ║
+║   Cliquez sur "Installer RizzoOS" sur le bureau           ║
+║   pour installer sur votre disque dur                     ║
 ║                                                           ║
 ╠═══════════════════════════════════════════════════════════╣
 ║                                                           ║
-║   LOGICIELS                                               ║
-║   🌐 Firefox, Chromium                                    ║
+║   LOGICIELS INCLUS                                        ║
+║   🌐 RizzoBrowser, Firefox, Chromium                      ║
 ║   📄 LibreOffice                                          ║
 ║   🎬 VLC, GIMP, Inkscape, Kdenlive, OBS                   ║
 ║   🎮 Steam, Lutris, Wine                                  ║
 ║   🤖 Waydroid (Android)                                   ║
 ║   🔒 Firewall, KeePassXC, ClamAV                          ║
+║   🖥️ Apache, PHP, MariaDB, phpMyAdmin                     ║
 ║                                                           ║
 ╠═══════════════════════════════════════════════════════════╣
 ║                                                           ║
 ║   COMMANDES UTILES                                        ║
-║   neofetch              → Infos système                   ║
-║   wine app.exe          → App Windows                     ║
-║   winetricks            → Composants Windows              ║
-║   waydroid show-full-ui → Android                         ║
-║   sudo ufw enable       → Activer pare-feu                ║
+║   rizzobrowser               → Navigateur RizzoOS         ║
+║   neofetch                   → Infos système              ║
+║   wine app.exe               → App Windows                ║
+║   waydroid show-full-ui      → Android                    ║
+║   start-web                  → Démarrer serveur web       ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 WELCOME
 
-chmod +x /home/rizzo/Desktop/*.desktop
-chown -R 1000:1000 /home/rizzo
+chmod +x /home/live/Desktop/*.desktop
+chown -R 1000:1000 /home/live
 
 # ============================================
-# === SCRIPT WAYDROID INIT ===
+# === SCRIPTS UTILITAIRES ===
 # ============================================
+
 cat > /usr/local/bin/setup-waydroid << 'WAYSCRIPT'
 #!/bin/bash
 echo "Initialisation de Waydroid..."
@@ -432,6 +908,17 @@ waydroid show-full-ui
 WAYSCRIPT
 chmod +x /usr/local/bin/setup-waydroid
 
+cat > /usr/local/bin/start-web << 'WEBSCRIPT'
+#!/bin/bash
+echo "Démarrage du serveur web..."
+sudo systemctl start mariadb
+sudo systemctl start apache2
+echo "✅ Apache et MariaDB démarrés !"
+echo "→ http://localhost"
+echo "→ http://localhost/phpmyadmin"
+WEBSCRIPT
+chmod +x /usr/local/bin/start-web
+
 # ============================================
 # === SERVICES ===
 # ============================================
@@ -439,12 +926,16 @@ systemctl enable NetworkManager
 systemctl enable bluetooth
 systemctl enable ufw
 systemctl enable apparmor
+systemctl enable apache2
+systemctl enable mariadb
 
 # ============================================
 # === FIREWALL ===
 # ============================================
 ufw default deny incoming
 ufw default allow outgoing
+ufw allow 80/tcp
+ufw allow 443/tcp
 
 # ============================================
 # === NETTOYAGE ===
@@ -476,17 +967,17 @@ cat << 'EOF' | sudo tee "$WORK_DIR/iso/boot/grub/grub.cfg"
 set timeout=10
 set default=0
 
-menuentry "RizzoOS 1.0" {
+menuentry "RizzoOS 1.0 - Live" {
     linux /boot/vmlinuz boot=live quiet splash
     initrd /boot/initrd
 }
 
-menuentry "RizzoOS 1.0 (Mode sans échec)" {
+menuentry "RizzoOS 1.0 - Live (Mode sans échec)" {
     linux /boot/vmlinuz boot=live nomodeset quiet
     initrd /boot/initrd
 }
 
-menuentry "RizzoOS 1.0 (Mode récupération)" {
+menuentry "RizzoOS 1.0 - Live (Mode récupération)" {
     linux /boot/vmlinuz boot=live single
     initrd /boot/initrd
 }
@@ -496,5 +987,22 @@ sudo grub-mkrescue -o "$ISO_OUTPUT" "$WORK_DIR/iso"
 
 echo ""
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║          RizzoOS 1.0 créé avec succès ! 🎉                ║"
+echo "║                                                           ║"
+echo "║   ██████╗ ██╗███████╗███████╗ ██████╗  ██████╗ ███████╗   ║"
+echo "║   ██╔══██╗██║╚══███╔╝╚══███╔╝██╔═══██╗██╔═══██╗██╔════╝   ║"
+echo "║   ██████╔╝██║  ███╔╝   ███╔╝ ██║   ██║██║   ██║███████╗   ║"
+echo "║   ██╔══██╗██║ ███╔╝   ███╔╝  ██║   ██║██║   ██║╚════██║   ║"
+echo "║   ██║  ██║██║███████╗███████╗╚██████╔╝╚██████╔╝███████║   ║"
+echo "║   ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝   ║"
+echo "║                                                           ║"
+echo "║          RizzoOS 1.0 - EDITION ULTIME 🔥                  ║"
+echo "║                                                           ║"
+echo "║   ✅ Installateur Calamares                               ║"
+echo "║   ✅ Windows (Wine)                                       ║"
+echo "║   ✅ Android (Waydroid)                                   ║"
+echo "║   ✅ Serveur Web (LAMP + phpMyAdmin)                      ║"
+echo "║   ✅ RizzoBrowser                                         ║"
+echo "║   ✅ Gaming (Steam, Lutris)                               ║"
+echo "║   ✅ Multimédia (VLC, GIMP, OBS, Kdenlive)                ║"
+echo "║                                                           ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
