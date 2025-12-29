@@ -9,19 +9,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
-          
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y debootstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin mtools
           
+      - name: Show build script
+        run: cat scripts/build-iso.sh
+        
       - name: Build ISO
         run: |
-          chmod +x scripts/*.sh
-          sudo ./scripts/build-iso.sh
+          chmod +x scripts/build-iso.sh
+          sudo bash scripts/build-iso.sh
           
       - name: Upload ISO
         uses: actions/upload-artifact@v4
