@@ -1,1 +1,24 @@
-
+name: Build RizzoOS ISO
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin mtools
+          
+      - name: Build ISO
+        run: |
+          chmod +x scripts/build-iso.sh
+          sudo bash scripts/build-iso.sh
+          
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: RizzoOS-1.0
+          path: iso/RizzoOS-1.0.iso
