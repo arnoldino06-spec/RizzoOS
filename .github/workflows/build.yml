@@ -21,4 +21,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RizzoOS-1.0
-          path: iso/RizzoOS-1.0.iso
+          path: iso/*.iso
