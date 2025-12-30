@@ -67,6 +67,7 @@ install_must debconf-utils ca-certificates
 install_must \
   linux-image-amd64 \
   live-boot \
+  live-boot-initramfs-tools \
   systemd-sysv \
   sudo \
   firmware-linux \
@@ -860,6 +861,9 @@ if command -v ufw >/dev/null 2>&1; then
   ufw allow 443/tcp || true
 fi
 
+# Rebuild initramfs
+update-initramfs -u -k all
+
 # Nettoyage
 apt-get clean
 apt-get autoremove -y || true
@@ -885,8 +889,8 @@ cat << 'EOF' | sudo tee "$WORK_DIR/iso/boot/grub/grub.cfg"
 set timeout=10
 set default=0
 
-menuentry "RizzoOS 1.3 - Live" {
-    linux /boot/vmlinuz boot=live quiet splash
+menuentry "RizzoOS 1.0 - Live" {
+    linux /boot/vmlinuz boot=live live-media-path=/live toram quiet splash
     initrd /boot/initrd
 }
 
