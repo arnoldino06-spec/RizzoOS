@@ -2,7 +2,7 @@
 set -e
 
 WORK_DIR="/tmp/rizzo-build"
-ISO_OUTPUT="$GITHUB_WORKSPACE/iso/RizzoOS-1.3.iso"
+ISO_OUTPUT="$GITHUB_WORKSPACE/iso/RizzoOS-1.0.iso"
 
 mkdir -p "$WORK_DIR"/{chroot,iso/{boot/grub,live}}
 mkdir -p "$(dirname "$ISO_OUTPUT")"
@@ -42,13 +42,9 @@ apt-get install -y \
     firmware-atheros \
     firmware-amd-graphics \
     intel-microcode \
-    amd64-microcode \
-    
+    amd64-microcode
 
-# Vérifier que le kernel est installé
-ls /boot/vmlinuz-* || apt-get install
-
- ============================================
+# ============================================
 # === KDE PLASMA COMPLET ===
 # ============================================
 apt-get install -y \
@@ -83,9 +79,11 @@ apt-get install -y \
 apt-get install -y \
     calamares \
     calamares-settings-debian || true
+
 mkdir -p /etc/calamares/branding/rizzoos
 touch /etc/calamares/branding/rizzoos/logo.png
 touch /etc/calamares/branding/rizzoos/welcome.png
+
 # ============================================
 # === NAVIGATEURS ===
 # ============================================
@@ -98,7 +96,7 @@ apt-get install -y \
 # ============================================
 apt-get install -y \
     libreoffice \
-    libreoffice-kde5 \
+    libreoffice-plasma \
     libreoffice-l10n-fr \
     hunspell-fr
 
@@ -223,14 +221,14 @@ apt-get install -y \
 # ============================================
 # === WAYDROID (Apps Android) ===
 # ============================================
-apt-get install -y curl ca-certificates gnupg lxc
-curl -s https://repo.waydro.id/waydroid.gpg | tee /usr/share/keyrings/waydroid.gpg > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/waydroid.gpg] https://repo.waydro.id/ bookworm main" > /etc/apt/sources.list.d/waydroid.list
-apt-get update
+apt-get install -y curl ca-certificates gnupg lxc || true
+curl -s https://repo.waydro.id/waydroid.gpg | tee /usr/share/keyrings/waydroid.gpg > /dev/null || true
+echo "deb [signed-by=/usr/share/keyrings/waydroid.gpg] https://repo.waydro.id/ bookworm main" > /etc/apt/sources.list.d/waydroid.list || true
+apt-get update || true
 apt-get install -y waydroid || true
 
 # ============================================
-# === UTILISATEUR LIVE (pour le mode Live) ===
+# === UTILISATEUR LIVE ===
 # ============================================
 useradd -m -s /bin/bash -G sudo,audio,video,cdrom,plugdev,netdev,bluetooth,lpadmin live
 echo "live:live" | chpasswd
@@ -281,10 +279,10 @@ welcomeStyleCalamares: true
 strings:
     productName:         "RizzoOS"
     shortProductName:    "RizzoOS"
-    version:             "1.3"
-    shortVersion:        "1.3"
-    versionedName:       "RizzoOS 1.3"
-    shortVersionedName:  "RizzoOS 1.3"
+    version:             "1.0"
+    shortVersion:        "1.0"
+    versionedName:       "RizzoOS 1.0"
+    shortVersionedName:  "RizzoOS 1.0"
     bootloaderEntryName: "RizzoOS"
     productUrl:          "https://rizzoos.com"
     supportUrl:          "https://rizzoos.com/support"
@@ -312,7 +310,7 @@ Presentation {
             color: "#1a1a2e"
             Text {
                 anchors.centerIn: parent
-                text: "Bienvenue sur RizzoOS 1.3\n\nInstallation en cours..."
+                text: "Bienvenue sur RizzoOS 1.0\n\nInstallation en cours..."
                 color: "#00d4ff"
                 font.pixelSize: 32
                 horizontalAlignment: Text.AlignHCenter
@@ -370,10 +368,10 @@ USERS
 # === BRANDING RIZZOOS ===
 # ============================================
 cat > /etc/os-release << 'OSREL'
-PRETTY_NAME="RizzoOS 1.3"
+PRETTY_NAME="RizzoOS 1.0"
 NAME="RizzoOS"
-VERSION_ID="1.3"
-VERSION="1.3"
+VERSION_ID="1.0"
+VERSION="1.0"
 ID=rizzoos
 ID_LIKE=debian
 HOME_URL="https://rizzoos.com"
@@ -385,9 +383,9 @@ OSREL
 
 cat > /etc/lsb-release << 'LSB'
 DISTRIB_ID=RizzoOS
-DISTRIB_RELEASE=1.3
+DISTRIB_RELEASE=1.0
 DISTRIB_CODENAME=rizzoos
-DISTRIB_DESCRIPTION="RizzoOS 1.3"
+DISTRIB_DESCRIPTION="RizzoOS 1.0"
 LSB
 
 echo "RizzoOS" > /etc/hostname
@@ -402,7 +400,7 @@ cat > /etc/issue << 'ISSUE'
   ██║  ██║██║███████╗███████╗╚██████╔╝╚██████╔╝███████║
   ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝
 
-  RizzoOS 1.3 - Par Arnaud
+  RizzoOS 1.0 - Par Arnaud
 
 ISSUE
 
@@ -410,7 +408,7 @@ cp /etc/issue /etc/issue.net
 
 cat > /etc/motd << 'MOTD'
 
-  Bienvenue sur RizzoOS 1.3 !
+  Bienvenue sur RizzoOS 1.0 !
   
   Mode Live - Cliquez sur "Installer RizzoOS" pour installer
   
@@ -531,16 +529,7 @@ WAYDROID
 
 cat > /home/live/Desktop/Bienvenue.txt << 'WELCOME'
 ╔═══════════════════════════════════════════════════════════╗
-║                                                           ║
-║   ██████╗ ██╗███████╗███████╗ ██████╗  ██████╗ ███████╗   ║
-║   ██╔══██╗██║╚══███╔╝╚══███╔╝██╔═══██╗██╔═══██╗██╔════╝   ║
-║   ██████╔╝██║  ███╔╝   ███╔╝ ██║   ██║██║   ██║███████╗   ║
-║   ██╔══██╗██║ ███╔╝   ███╔╝  ██║   ██║██║   ██║╚════██║   ║
-║   ██║  ██║██║███████╗███████╗╚██████╔╝╚██████╔╝███████║   ║
-║   ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝   ║
-║                                                           ║
-║              RizzoOS 1.3 - Par Arnaud                     ║
-║                                                           ║
+║              RizzoOS 1.0 - Par Arnaud                     ║
 ╠═══════════════════════════════════════════════════════════╣
 ║                                                           ║
 ║   🔧 INSTALLATION                                         ║
@@ -579,16 +568,16 @@ chmod +x /usr/local/bin/setup-waydroid
 # ============================================
 # === SERVICES ===
 # ============================================
-systemctl enable NetworkManager
-systemctl enable bluetooth
-systemctl enable ufw
-systemctl enable apparmor
+systemctl enable NetworkManager || true
+systemctl enable bluetooth || true
+systemctl enable ufw || true
+systemctl enable apparmor || true
 
 # ============================================
 # === FIREWALL ===
 # ============================================
-ufw default deny incoming
-ufw default allow outgoing
+ufw default deny incoming || true
+ufw default allow outgoing || true
 
 # ============================================
 # === NETTOYAGE ===
@@ -620,17 +609,17 @@ cat << 'EOF' | sudo tee "$WORK_DIR/iso/boot/grub/grub.cfg"
 set timeout=10
 set default=0
 
-menuentry "RizzoOS 1.3" {
+menuentry "RizzoOS 1.0" {
     linux /boot/vmlinuz boot=live quiet splash
     initrd /boot/initrd
 }
 
-menuentry "RizzoOS 1.3 (Mode sans échec)" {
+menuentry "RizzoOS 1.0 (Mode sans échec)" {
     linux /boot/vmlinuz boot=live nomodeset quiet
     initrd /boot/initrd
 }
 
-menuentry "RizzoOS 1.3 (Mode récupération)" {
+menuentry "RizzoOS 1.0 (Mode récupération)" {
     linux /boot/vmlinuz boot=live single
     initrd /boot/initrd
 }
@@ -640,5 +629,5 @@ sudo grub-mkrescue -o "$ISO_OUTPUT" "$WORK_DIR/iso"
 
 echo ""
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║          RizzoOS 1.3 créé avec succès ! 🎉                ║"
+echo "║          RizzoOS 1.0 créé avec succès ! 🎉                ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
