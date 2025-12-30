@@ -17,8 +17,25 @@ jobs:
           chmod +x scripts/build-iso.sh
           sudo bash scripts/build-iso.sh
           
+      - name: Find ISO
+        run: |
+          echo "=== Recherche ISO ==="
+          sudo find / -name "*.iso" 2>/dev/null || true
+          echo "=== Contenu GITHUB_WORKSPACE ==="
+          ls -la ${{ github.workspace }}/iso/ || echo "Pas de dossier iso"
+          echo "=== Contenu /tmp ==="
+          ls -la /tmp/rizzo-build/iso/ || echo "Pas de dossier /tmp/rizzo-build/iso"
+          
+      - name: Copy ISO
+        run: |
+          mkdir -p ./output
+          sudo cp ${{ github.workspace }}/iso/*.iso ./output/ 2>/dev/null || \
+          sudo cp /tmp/rizzo-build/*.iso ./output/ 2>/dev/null || \
+          sudo cp $(sudo find / -name "RizzoOS*.iso" 2>/dev/null | head -1) ./output/RizzoOS-1.0.iso
+          ls -la ./output/
+          
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
           name: RizzoOS-1.0
-          path: iso/*.iso
+          path: output/*.iso
