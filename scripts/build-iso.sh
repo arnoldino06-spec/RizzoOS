@@ -43,10 +43,7 @@ apt-get install -y \
     firmware-amd-graphics \
     intel-microcode \
     amd64-microcode \
-    grub-pc \
-    grub-efi-amd64 \
-    os-prober \
-    efibootmgr
+    
 
 # Vérifier que le kernel est installé
 ls /boot/vmlinuz-* || apt-get install
