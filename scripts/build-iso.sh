@@ -2,18 +2,11 @@
 set -euo pipefail
 
 # ============================================================
-# RizzoOS ISO Builder (GitHub Actions friendly)
-# - Fix Calamares config typo (DM vs UNPACK)
-# - Fix "Installer" desktop launcher (sudo GUI -> Konsole)
-# - Do NOT hide calamares install failure
-# - Add Calamares branding placeholder images
-# - Add cleanup trap for mounts
-# - Make ISO_OUTPUT robust (fallback if GITHUB_WORKSPACE empty)
-# - Add -- -volid "RizzoOS" to avoid "Debian" label
+# RizzoOS 1.3 ISO Builder - CORRIGÉ
 # ============================================================
 
 WORK_DIR="/tmp/rizzo-build"
-ISO_OUTPUT="${GITHUB_WORKSPACE:-$PWD}/iso/RizzoOS-1.0.iso"
+ISO_OUTPUT="${GITHUB_WORKSPACE:-$PWD}/iso/RizzoOS-1.3.iso"
 
 mkdir -p "$WORK_DIR"/{chroot,iso/{boot/grub,live}}
 mkdir -p "$(dirname "$ISO_OUTPUT")"
@@ -36,7 +29,7 @@ sudo apt-get install -y \
 # --- Bootstrap Debian
 sudo debootstrap --arch=amd64 --variant=minbase bookworm "$WORK_DIR/chroot" http://deb.debian.org/debian
 
-# DNS inside chroot (prevents apt "temporary failure resolving")
+# DNS inside chroot
 sudo cp -f /etc/resolv.conf "$WORK_DIR/chroot/etc/resolv.conf" || true
 
 cat << 'EOF' | sudo tee "$WORK_DIR/chroot/etc/apt/sources.list"
@@ -65,7 +58,6 @@ install_maybe() { apt-get install -y "$@" || true; }
 dpkg --add-architecture i386
 apt-get update
 
-# Needed for phpMyAdmin preseeding
 install_must debconf-utils ca-certificates
 
 # ============================================
@@ -84,11 +76,13 @@ install_must \
   firmware-atheros \
   firmware-amd-graphics \
   intel-microcode \
-  amd64-microcode \
-  grub-pc \
-  grub-efi-amd64 \
-  os-prober \
-  efibootmgr
+  amd64-microcode
+
+# GRUB en install_maybe (évite conflit kernel)
+install_maybe grub-pc grub-efi-amd64 os-prober efibootmgr
+
+# Vérifier que le kernel est installé
+ls /boot/vmlinuz-* || install_must --reinstall linux-image-amd64
 
 # ============================================
 # === KDE PLASMA COMPLET ===
@@ -119,17 +113,14 @@ install_must \
   breeze-icon-theme \
   papirus-icon-theme
 
-# Polkit agent KDE (utile pour actions root en GUI)
 install_maybe polkit-kde-agent-1
 
 # ============================================
 # === CALAMARES (Installateur) ===
-# IMPORTANT: NE PAS CACHER UN ECHEC
 # ============================================
 install_must calamares
 install_maybe calamares-settings-debian
 
-# QML modules (souvent utiles selon builds Calamares)
 install_maybe \
   qml-module-qtquick2 \
   qml-module-qtquick-controls \
@@ -200,8 +191,6 @@ install_must \
 # ============================================
 # === PHPMYADMIN ===
 # ============================================
-# Note: sur Debian/MariaDB modernes, le compte root peut être via unix_socket.
-# On tente une install non bloquante.
 echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | debconf-set-selections || true
 echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections || true
 echo "phpmyadmin phpmyadmin/mysql/admin-pass password root" | debconf-set-selections || true
@@ -211,7 +200,7 @@ install_maybe phpmyadmin
 ln -sf /usr/share/phpmyadmin /var/www/html/phpmyadmin || true
 
 # ============================================
-# === RIZZOBROWSER (Navigateur RizzoOS) ===
+# === RIZZOBROWSER ===
 # ============================================
 install_must python3-pyqt5 python3-pyqt5.qtwebengine
 
@@ -358,7 +347,6 @@ install_maybe htop btop neofetch gparted baobab gnome-disk-utility bleachbit
 
 # ============================================
 # === RÉSEAU & INTERNET ===
-# (évite doublons: NM déjà installé via KDE mais on assure bluetooth/outils)
 # ============================================
 install_must network-manager bluetooth
 install_maybe network-manager-gnome blueman transmission-qt filezilla remmina
@@ -446,10 +434,10 @@ welcomeStyleCalamares: true
 strings:
     productName:         "RizzoOS"
     shortProductName:    "RizzoOS"
-    version:             "1.0"
-    shortVersion:        "1.0"
-    versionedName:       "RizzoOS 1.0"
-    shortVersionedName:  "RizzoOS 1.0"
+    version:             "1.3"
+    shortVersion:        "1.3"
+    versionedName:       "RizzoOS 1.3"
+    shortVersionedName:  "RizzoOS 1.3"
     bootloaderEntryName: "RizzoOS"
     productUrl:          "https://rizzoos.com"
     supportUrl:          "https://rizzoos.com/support"
@@ -476,7 +464,7 @@ Presentation {
             color: "#1a1a2e"
             Text {
                 anchors.centerIn: parent
-                text: "Bienvenue sur RizzoOS 1.0\n\nInstallation en cours..."
+                text: "Bienvenue sur RizzoOS 1.3\n\nInstallation en cours..."
                 color: "#00d4ff"
                 font.pixelSize: 32
                 horizontalAlignment: Text.AlignHCenter
@@ -486,11 +474,9 @@ Presentation {
 }
 QML
 
-# Placeholders images (évite crash branding)
-base64 -d > /etc/calamares/branding/rizzoos/logo.png << 'B64'
-iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7W2SMAAAAASUVORK5CYII=
-B64
-cp /etc/calamares/branding/rizzoos/logo.png /etc/calamares/branding/rizzoos/welcome.png
+# Images placeholder (évite crash)
+touch /etc/calamares/branding/rizzoos/logo.png
+touch /etc/calamares/branding/rizzoos/welcome.png
 
 cat > /etc/calamares/modules/unpackfs.conf << 'UNPACK'
 unpack:
@@ -499,7 +485,6 @@ unpack:
     destination: ""
 UNPACK
 
-# FIX: delimiter correct (DM) + no stray "UNPACK"
 cat > /etc/calamares/modules/displaymanager.conf << 'DM'
 displaymanagers:
   - sddm
@@ -574,10 +559,10 @@ KEYBOARD
 # === BRANDING OS ===
 # ============================================
 cat > /etc/os-release << 'OSREL'
-PRETTY_NAME="RizzoOS 1.0"
+PRETTY_NAME="RizzoOS 1.3"
 NAME="RizzoOS"
-VERSION_ID="1.0"
-VERSION="1.0"
+VERSION_ID="1.3"
+VERSION="1.3"
 ID=rizzoos
 ID_LIKE=debian
 HOME_URL="https://rizzoos.com"
@@ -589,22 +574,39 @@ OSREL
 
 cat > /etc/lsb-release << 'LSB'
 DISTRIB_ID=RizzoOS
-DISTRIB_RELEASE=1.0
+DISTRIB_RELEASE=1.3
 DISTRIB_CODENAME=rizzoos
-DISTRIB_DESCRIPTION="RizzoOS 1.0"
+DISTRIB_DESCRIPTION="RizzoOS 1.3"
 LSB
 
 echo "RizzoOS" > /etc/hostname
 echo "127.0.0.1 RizzoOS" >> /etc/hosts
 
+cat > /etc/issue << 'ISSUE'
+
+  ██████╗ ██╗███████╗███████╗ ██████╗  ██████╗ ███████╗
+  ██╔══██╗██║╚══███╔╝╚══███╔╝██╔═══██╗██╔═══██╗██╔════╝
+  ██████╔╝██║  ███╔╝   ███╔╝ ██║   ██║██║   ██║███████╗
+  ██╔══██╗██║ ███╔╝   ███╔╝  ██║   ██║██║   ██║╚════██║
+  ██║  ██║██║███████╗███████╗╚██████╔╝╚██████╔╝███████║
+  ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝
+
+  RizzoOS 1.3 - Par Arnaud
+
+ISSUE
+
+cp /etc/issue /etc/issue.net
+
 cat > /etc/motd << 'MOTD'
-Bienvenue sur RizzoOS 1.0 !
 
-Mode Live - Pour installer, cliquez sur "Installer RizzoOS" sur le bureau
+  Bienvenue sur RizzoOS 1.3 !
 
-rizzobrowser          → Navigateur RizzoOS
-waydroid              → Android (si support kernel)
-http://localhost      → Serveur Web
+  Mode Live - Cliquez sur "Installer RizzoOS" sur le bureau
+
+  rizzobrowser    → Navigateur RizzoOS
+  start-web       → Démarrer serveur web
+  http://localhost → Serveur Web
+
 MOTD
 
 # ============================================
@@ -652,7 +654,7 @@ cat > /var/www/html/index.html << 'APACHE'
 </head>
 <body>
   <div class="container">
-    <h1>🚀 RizzoOS</h1>
+    <h1>🚀 RizzoOS 1.3</h1>
     <p>Votre serveur web est opérationnel !</p>
     <div class="links">
       <a href="/phpmyadmin">📊 phpMyAdmin</a>
@@ -664,7 +666,7 @@ cat > /var/www/html/index.html << 'APACHE'
 APACHE
 
 # ============================================
-# === AUTOLOGIN SDDM (Mode Live) ===
+# === AUTOLOGIN SDDM ===
 # ============================================
 mkdir -p /etc/sddm.conf.d
 cat > /etc/sddm.conf.d/autologin.conf << 'SDDM'
@@ -677,7 +679,7 @@ Current=breeze
 SDDM
 
 # ============================================
-# === CONFIG KDE (léger) ===
+# === CONFIG KDE ===
 # ============================================
 mkdir -p /home/live/.config
 
@@ -704,12 +706,16 @@ LookAndFeelPackage=org.kde.breezedark.desktop
 widgetStyle=breeze
 THEME
 
+cat > /home/live/.config/plasmarc << 'PLASMA'
+[Theme]
+name=breeze-dark
+PLASMA
+
 # ============================================
 # === RACCOURCIS BUREAU ===
 # ============================================
 mkdir -p /home/live/Desktop
 
-# FIX: sudo GUI -> Konsole (fiable)
 cat > /home/live/Desktop/install-rizzoos.desktop << 'INSTALL'
 [Desktop Entry]
 Name=Installer RizzoOS
@@ -779,20 +785,34 @@ Type=Application
 PMA
 
 cat > /home/live/Desktop/Bienvenue.txt << 'WELCOME'
-RizzoOS 1.0 - Par Arnaud
-
-INSTALLATION
-- Cliquez sur "Installer RizzoOS" sur le bureau
-
-OUTILS
-- rizzobrowser
-- start-web
-- http://localhost
+╔═══════════════════════════════════════════════════════════╗
+║              RizzoOS 1.3 - Par Arnaud                     ║
+╠═══════════════════════════════════════════════════════════╣
+║                                                           ║
+║   🔧 INSTALLATION                                         ║
+║   Cliquez sur "Installer RizzoOS" sur le bureau           ║
+║                                                           ║
+╠═══════════════════════════════════════════════════════════╣
+║                                                           ║
+║   🌐 SERVEUR WEB                                          ║
+║   start-web           → Démarrer Apache/MariaDB           ║
+║   http://localhost    → Page d'accueil                    ║
+║   http://localhost/phpmyadmin → phpMyAdmin                ║
+║                                                           ║
+╠═══════════════════════════════════════════════════════════╣
+║                                                           ║
+║   LOGICIELS                                               ║
+║   🌐 RizzoBrowser, Firefox, Chromium                      ║
+║   📄 LibreOffice                                          ║
+║   🎬 VLC, GIMP, Inkscape, Kdenlive, OBS                   ║
+║   🎮 Steam, Lutris, Wine                                  ║
+║   🤖 Waydroid (Android)                                   ║
+║   🔒 Firewall, KeePassXC, ClamAV                          ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
 WELCOME
 
 chmod +x /home/live/Desktop/*.desktop
-
-# Fix ownership using actual user name
 chown -R live:live /home/live
 
 # ============================================
@@ -821,7 +841,7 @@ WEBSCRIPT
 chmod +x /usr/local/bin/start-web
 
 # ============================================
-# === SERVICES (dans chroot: peut échouer, donc || true)
+# === SERVICES ===
 # ============================================
 systemctl enable NetworkManager 2>/dev/null || true
 systemctl enable bluetooth 2>/dev/null || true
@@ -831,7 +851,7 @@ systemctl enable apache2 2>/dev/null || true
 systemctl enable mariadb 2>/dev/null || true
 systemctl enable sddm 2>/dev/null || true
 
-# Firewall (best effort)
+# Firewall
 if command -v ufw >/dev/null 2>&1; then
   ufw default deny incoming || true
   ufw default allow outgoing || true
@@ -858,27 +878,26 @@ cat << 'EOF' | sudo tee "$WORK_DIR/iso/boot/grub/grub.cfg"
 set timeout=10
 set default=0
 
-menuentry "RizzoOS 1.0 - Live" {
+menuentry "RizzoOS 1.3 - Live" {
     linux /boot/vmlinuz boot=live quiet splash
     initrd /boot/initrd
 }
 
-menuentry "RizzoOS 1.0 - Live (Mode sans échec)" {
+menuentry "RizzoOS 1.3 - Live (Mode sans échec)" {
     linux /boot/vmlinuz boot=live nomodeset quiet
     initrd /boot/initrd
 }
 
-menuentry "RizzoOS 1.0 - Live (Mode récupération)" {
+menuentry "RizzoOS 1.3 - Live (Mode récupération)" {
     linux /boot/vmlinuz boot=live single
     initrd /boot/initrd
 }
 EOF
 
-# volid: évite un label "Debian" au montage
 sudo grub-mkrescue -o "$ISO_OUTPUT" "$WORK_DIR/iso" -- -volid "RizzoOS"
 
 echo ""
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║          RizzoOS 1.0 créé avec succès ! 🎉                ║"
+echo "║          RizzoOS 1.3 créé avec succès ! 🎉                ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo "ISO : $ISO_OUTPUT"
