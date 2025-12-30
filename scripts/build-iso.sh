@@ -83,7 +83,9 @@ apt-get install -y \
 apt-get install -y \
     calamares \
     calamares-settings-debian || true
-
+mkdir -p /etc/calamares/branding/rizzoos
+touch /etc/calamares/branding/rizzoos/logo.png
+touch /etc/calamares/branding/rizzoos/welcome.png
 # ============================================
 # === NAVIGATEURS ===
 # ============================================
