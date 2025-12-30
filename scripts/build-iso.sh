@@ -875,7 +875,7 @@ sudo umount -lf "$WORK_DIR/chroot/dev" || true
 sudo umount -lf "$WORK_DIR/chroot/proc" || true
 sudo umount -lf "$WORK_DIR/chroot/sys" || true
 
-sudo mksquashfs "$WORK_DIR/chroot" "$WORK_DIR/iso/live/filesystem.squashfs" -comp gzip -b 256K -no-progress -e proc -e sys -e dev -e run
+sudo mksquashfs "$WORK_DIR/chroot" "$WORK_DIR/iso/live/filesystem.squashfs" -comp xz -b 1M -no-progress -e proc -e sys -e dev -e run
 
 sudo cp "$WORK_DIR/chroot/boot/vmlinuz-"* "$WORK_DIR/iso/boot/vmlinuz"
 sudo cp "$WORK_DIR/chroot/boot/initrd.img-"* "$WORK_DIR/iso/boot/initrd"
