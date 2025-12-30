@@ -2,7 +2,7 @@
 set -e
 
 WORK_DIR="/tmp/rizzo-build"
-ISO_OUTPUT="$GITHUB_WORKSPACE/iso/RizzoOS-1.0.iso"
+ISO_OUTPUT="/home/runner/work/RizzoOS/RizzoOS/iso/RizzoOS-1.0.iso"
 
 mkdir -p "$WORK_DIR"/{chroot,iso/{boot/grub,live}}
 mkdir -p "$(dirname "$ISO_OUTPUT")"
