@@ -48,7 +48,10 @@ apt-get install -y \
     os-prober \
     efibootmgr
 
-# ============================================
+# Vérifier que le kernel est installé
+ls /boot/vmlinuz-* || apt-get install
+
+ ============================================
 # === KDE PLASMA COMPLET ===
 # ============================================
 apt-get install -y \
