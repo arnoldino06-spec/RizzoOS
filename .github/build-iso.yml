@@ -1,8 +1,6 @@
 name: Build RizzoOS ISO
-
 on:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,14 +17,8 @@ jobs:
           chmod +x scripts/build-iso.sh
           sudo bash scripts/build-iso.sh
           
-      - name: Find and move ISO
-        run: |
-          sudo find / -name "*.iso" 2>/dev/null || true
-          sudo cp /tmp/rizzo-build/iso/*.iso ./RizzoOS-1.0.iso 2>/dev/null || sudo cp $(sudo find / -name "RizzoOS*.iso" 2>/dev/null | head -1) ./RizzoOS-1.0.iso || true
-          ls -la *.iso || echo "No ISO found"
-          
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
-          name: RizzoOS-ISO
-          path: "*.iso"
+          name: RizzoOS-1.0
+          path: iso/RizzoOS-1.0.iso
