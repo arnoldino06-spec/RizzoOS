@@ -136,7 +136,7 @@ install_must firefox-esr chromium
 # ============================================
 # === BUREAUTIQUE ===
 # ============================================
-install_must libreoffice libreoffice-kde5 libreoffice-l10n-fr hunspell-fr
+install_must libreoffice libreoffice-plasma libreoffice-l10n-fr hunspell-fr
 
 # ============================================
 # === MULTIMÉDIA ===
