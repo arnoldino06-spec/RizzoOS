@@ -15,15 +15,10 @@ jobs:
       - name: Build ISO
         run: |
           chmod +x scripts/build-iso.sh
-          sudo -E bash scripts/build-iso.sh
-          
-      - name: Copy ISO
-        run: |
-          sudo cp /iso/*.iso ./RizzoOS-1.0.iso
-          ls -la *.iso
+          sudo bash scripts/build-iso.sh
           
       - name: Upload ISO
         uses: actions/upload-artifact@v4
         with:
           name: RizzoOS-1.0
-          path: "*.iso"
+          path: /home/runner/work/RizzoOS/RizzoOS/iso/*.iso
