@@ -368,6 +368,11 @@ echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selecti
 apt-get install -y phpmyadmin || true
 ln -sf /usr/share/phpmyadmin /var/www/html/phpmyadmin || true
 
+# Configurer MariaDB avec mot de passe root
+service mariadb start || true
+mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root'; FLUSH PRIVILEGES;" || true
+service mariadb stop || true
+
 # IMPORTANT: Désactiver démarrage auto (évite kernel panic)
 systemctl disable apache2 || true
 systemctl disable mariadb || true
