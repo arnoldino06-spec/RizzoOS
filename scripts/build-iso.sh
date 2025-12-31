@@ -385,6 +385,17 @@ apt-get install -y \
     bleachbit || true
 
 # ============================================
+# === TIMESHIFT (Sauvegardes) ===
+# ============================================
+apt-get install -y timeshift || true
+
+# ============================================
+# === FLATPAK (Magasin d'apps) ===
+# ============================================
+apt-get install -y flatpak || true
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
+
+# ============================================
 # === RÉSEAU & INTERNET ===
 # ============================================
 apt-get install -y \
@@ -763,6 +774,26 @@ Type=Application
 Terminal=false
 LAMPICON
 
+cat > /home/live/Desktop/flatpak.desktop << 'FLATPAK'
+[Desktop Entry]
+Name=Logiciels (Flatpak)
+Comment=Installer des applications
+Exec=konsole -e bash -c "echo '=== Flatpak ==='; echo 'Pour installer une app:'; echo 'flatpak install flathub nom-app'; echo ''; echo 'Exemples:'; echo 'flatpak install flathub com.spotify.Client'; echo 'flatpak install flathub com.discordapp.Discord'; echo 'flatpak install flathub com.visualstudio.code'; echo ''; echo 'Appuyez sur Entrée...'; read"
+Icon=system-software-install
+Type=Application
+Terminal=false
+FLATPAK
+
+cat > /home/live/Desktop/timeshift.desktop << 'TIMESHIFT'
+[Desktop Entry]
+Name=Timeshift
+Comment=Sauvegardes système
+Exec=sudo timeshift-gtk
+Icon=timeshift
+Type=Application
+Terminal=false
+TIMESHIFT
+
 cat > /home/live/Desktop/Bienvenue.txt << 'WELCOME'
 ╔═══════════════════════════════════════════════════════════╗
 ║              RizzoOS 1.0 - Par Arnaud                     ║
@@ -780,7 +811,8 @@ cat > /home/live/Desktop/Bienvenue.txt << 'WELCOME'
 ║   🎮 Steam, Lutris, Wine                                  ║
 ║   🤖 Waydroid (Android)                                   ║
 ║   🔒 Firewall, KeePassXC, ClamAV                          ║
-║                                                           ║
+║   💾 Timeshift (sauvegardes)                              ║
+║   📦 Flatpak (magasin d'apps)                             ║
 ╚═══════════════════════════════════════════════════════════╝
 WELCOME
 
