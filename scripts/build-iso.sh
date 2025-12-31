@@ -153,6 +153,85 @@ apt-get install -y \
     npm || true
 
 # ============================================
+# === SERVEUR WEB LAMP ===
+# ============================================
+apt-get install -y \
+    apache2 \
+    mariadb-server \
+    mariadb-client \
+    php \
+    php-mysql \
+    php-curl \
+    php-gd \
+    php-mbstring \
+    php-xml \
+    php-zip \
+    libapache2-mod-php || true
+
+    # Page d'accueil Apache
+cat > /var/www/html/index.html << 'WEBPAGE'
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>RizzoOS - Serveur Web</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+        }
+        h1 {
+            color: #00d4ff;
+            font-size: 3em;
+        }
+        a {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 30px;
+            background: #00d4ff;
+            color: #1a1a2e;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+        }
+        a:hover {
+            background: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 RizzoOS</h1>
+        <p>Serveur web opérationnel !</p>
+        <a href="/phpmyadmin">📊 phpMyAdmin</a>
+    </div>
+</body>
+</html>
+WEBPAGE
+
+# phpMyAdmin (config auto)
+echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | debconf-set-selections || true
+echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections || true
+apt-get install -y phpmyadmin || true
+ln -sf /usr/share/phpmyadmin /var/www/html/phpmyadmin || true
+
+# IMPORTANT: Désactiver démarrage auto (évite kernel panic)
+systemctl disable apache2 || true
+systemctl disable mariadb || true
+
+# ============================================
 # === OUTILS SYSTÈME ===
 # ============================================
 apt-get install -y \
@@ -527,6 +606,16 @@ Icon=waydroid
 Type=Application
 WAYDROID
 
+cat > /home/live/Desktop/lamp.desktop << 'LAMPICON'
+[Desktop Entry]
+Name=Serveur Web
+Comment=Démarrer Apache et MariaDB
+Exec=konsole -e start-lamp
+Icon=server-database
+Type=Application
+Terminal=false
+LAMPICON
+
 cat > /home/live/Desktop/Bienvenue.txt << 'WELCOME'
 ╔═══════════════════════════════════════════════════════════╗
 ║              RizzoOS 1.0 - Par Arnaud                     ║
@@ -564,6 +653,27 @@ sleep 5
 waydroid show-full-ui
 WAYSCRIPT
 chmod +x /usr/local/bin/setup-waydroid
+
+# ============================================
+# === SCRIPT START LAMP ===
+# ============================================
+cat > /usr/local/bin/start-lamp << 'STARTLAMP'
+#!/bin/bash
+echo "======================================"
+echo "   Démarrage du serveur web LAMP"
+echo "======================================"
+sudo systemctl start mariadb
+sudo systemctl start apache2
+echo ""
+echo "✅ Serveur web démarré !"
+echo ""
+echo "→ http://localhost"
+echo "→ http://localhost/phpmyadmin"
+echo ""
+echo "Appuyez sur Entrée pour fermer..."
+read
+STARTLAMP
+chmod +x /usr/local/bin/start-lamp
 
 # ============================================
 # === SERVICES ===
