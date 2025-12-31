@@ -795,6 +795,7 @@ Terminal=false
 TIMESHIFT
 
 cat > /home/live/Desktop/Bienvenue.txt << 'WELCOME'
+
 ╔═══════════════════════════════════════════════════════════╗
 ║              RizzoOS 1.0 - Par Arnaud                     ║
 ╠═══════════════════════════════════════════════════════════╣
@@ -818,6 +819,22 @@ WELCOME
 
 chmod +x /home/live/Desktop/*.desktop
 chown -R 1000:1000 /home/live
+
+# ============================================
+# === SQUELETTE UTILISATEUR (pour tous les nouveaux users) ===
+# ============================================
+mkdir -p /etc/skel/Desktop
+mkdir -p /etc/skel/.config
+
+# Copier les icônes bureau
+cp /home/live/Desktop/*.desktop /etc/skel/Desktop/
+cp /home/live/Desktop/Bienvenue.txt /etc/skel/Desktop/
+
+# Copier la config KDE
+cp -r /home/live/.config/* /etc/skel/.config/
+
+# Permissions
+chmod +x /etc/skel/Desktop/*.desktop
 
 # ============================================
 # === SCRIPT WAYDROID INIT ===
