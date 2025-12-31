@@ -88,8 +88,149 @@ touch /etc/calamares/branding/rizzoos/welcome.png
 # === NAVIGATEURS ===
 # ============================================
 apt-get install -y \
-    firefox-esr \
     chromium
+    
+# ============================================
+# === RIZZO NAVIGATOR ===
+# ============================================
+apt-get install -y python3-pyqt5 python3-pyqt5.qtwebengine
+
+cat > /usr/local/bin/rizzo-navigator << 'BROWSER'
+#!/usr/bin/env python3
+import sys
+from PyQt5.QtCore import QUrl
+from PyQt5.QtWidgets import QApplication, QMainWindow, QToolBar, QLineEdit, QAction, QTabWidget, QStatusBar
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+
+class Browser(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Rizzo Navigator")
+        self.setGeometry(100, 100, 1400, 900)
+
+        self.tabs = QTabWidget()
+        self.tabs.setTabsClosable(True)
+        self.tabs.tabCloseRequested.connect(self.close_tab)
+        self.tabs.currentChanged.connect(self.tab_changed)
+        self.setCentralWidget(self.tabs)
+
+        navbar = QToolBar("Navigation")
+        navbar.setMovable(False)
+        self.addToolBar(navbar)
+
+        back_btn = QAction("◀", self)
+        back_btn.triggered.connect(lambda: self.current_browser().back())
+        navbar.addAction(back_btn)
+
+        forward_btn = QAction("▶", self)
+        forward_btn.triggered.connect(lambda: self.current_browser().forward())
+        navbar.addAction(forward_btn)
+
+        reload_btn = QAction("⟳", self)
+        reload_btn.triggered.connect(lambda: self.current_browser().reload())
+        navbar.addAction(reload_btn)
+
+        home_btn = QAction("🏠", self)
+        home_btn.triggered.connect(self.go_home)
+        navbar.addAction(home_btn)
+
+        self.url_bar = QLineEdit()
+        self.url_bar.returnPressed.connect(self.navigate)
+        navbar.addWidget(self.url_bar)
+
+        new_tab_btn = QAction("+", self)
+        new_tab_btn.triggered.connect(lambda: self.add_tab())
+        navbar.addAction(new_tab_btn)
+
+        self.status = QStatusBar()
+        self.setStatusBar(self.status)
+
+        self.add_tab()
+
+        self.setStyleSheet("""
+            QMainWindow { background-color: #1a1a2e; }
+            QToolBar { background-color: #16213e; border: none; padding: 5px; }
+            QLineEdit {
+                background-color: #0f3460;
+                color: white;
+                border: 2px solid #00d4ff;
+                border-radius: 15px;
+                padding: 8px 15px;
+                font-size: 14px;
+                min-width: 400px;
+            }
+            QLineEdit:focus { border-color: #00ff88; }
+            QTabWidget::pane { border: none; }
+            QTabBar::tab {
+                background-color: #16213e;
+                color: white;
+                padding: 10px 20px;
+                margin-right: 2px;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+            }
+            QTabBar::tab:selected { background-color: #0f3460; }
+            QStatusBar { background-color: #16213e; color: #00d4ff; }
+        """)
+
+    def add_tab(self, url="https://duckduckgo.com"):
+        browser = QWebEngineView()
+        browser.setUrl(QUrl(url))
+        browser.urlChanged.connect(self.update_url)
+        browser.titleChanged.connect(lambda title: self.tabs.setTabText(
+            self.tabs.indexOf(browser), (title[:20] + "...") if len(title) > 20 else title))
+        i = self.tabs.addTab(browser, "Nouvel onglet")
+        self.tabs.setCurrentIndex(i)
+        return browser
+
+    def current_browser(self):
+        return self.tabs.currentWidget()
+
+    def navigate(self):
+        url = self.url_bar.text().strip()
+        if not url.startswith("http"):
+            if "." in url:
+                url = "https://" + url
+            else:
+                url = f"https://duckduckgo.com/?q={url}"
+        self.current_browser().setUrl(QUrl(url))
+
+    def update_url(self, url):
+        self.url_bar.setText(url.toString())
+        self.status.showMessage(url.toString())
+
+    def go_home(self):
+        self.current_browser().setUrl(QUrl("https://duckduckgo.com"))
+
+    def close_tab(self, i):
+        if self.tabs.count() > 1:
+            self.tabs.removeTab(i)
+        else:
+            self.close()
+
+    def tab_changed(self, i):
+        if self.current_browser():
+            self.update_url(self.current_browser().url())
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    app.setApplicationName("Rizzo Navigator")
+    window = Browser()
+    window.show()
+    sys.exit(app.exec_())
+BROWSER
+chmod +x /usr/local/bin/rizzo-navigator
+
+# Menu application
+cat > /usr/share/applications/rizzo-navigator.desktop << 'MENU'
+[Desktop Entry]
+Name=Rizzo Navigator
+Comment=Navigateur Web RizzoOS
+Exec=/usr/local/bin/rizzo-navigator
+Icon=web-browser
+Type=Application
+Categories=Network;WebBrowser;
+MENU
 
 # ============================================
 # === BUREAUTIQUE ===
@@ -442,6 +583,11 @@ sudoersGroup: sudo
 setRootPassword: true
 doReusePassword: true
 USERS
+# Supprimer l'icône Install Debian (on garde seulement Installer RizzoOS)
+rm -f /usr/share/applications/calamares-debian.desktop || true
+rm -f /usr/share/applications/install-debian.desktop || true
+rm -f /home/live/Desktop/calamares-debian.desktop || true
+rm -f /home/live/Desktop/install-debian.desktop || true
 
 # ============================================
 # === BRANDING RIZZOOS ===
@@ -565,13 +711,14 @@ Type=Application
 Terminal=false
 INSTALL
 
-cat > /home/live/Desktop/firefox.desktop << 'FF'
+cat > /home/live/Desktop/rizzo-navigator.desktop << 'NAVIGATOR'
 [Desktop Entry]
-Name=Firefox
-Exec=firefox-esr
-Icon=firefox-esr
+Name=Rizzo Navigator
+Comment=Navigateur Web RizzoOS
+Exec=/usr/local/bin/rizzo-navigator
+Icon=web-browser
 Type=Application
-FF
+NAVIGATOR
 
 cat > /home/live/Desktop/dolphin.desktop << 'DOLPHIN'
 [Desktop Entry]
@@ -627,7 +774,7 @@ cat > /home/live/Desktop/Bienvenue.txt << 'WELCOME'
 ╠═══════════════════════════════════════════════════════════╣
 ║                                                           ║
 ║   LOGICIELS                                               ║
-║   🌐 Firefox, Chromium                                    ║
+║   🌐 Rizzo Navigator, Chromium                            ║
 ║   📄 LibreOffice                                          ║
 ║   🎬 VLC, GIMP, Inkscape, Kdenlive, OBS                   ║
 ║   🎮 Steam, Lutris, Wine                                  ║
