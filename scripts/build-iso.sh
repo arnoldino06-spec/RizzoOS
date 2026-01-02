@@ -81,8 +81,46 @@ apt-get install -y \
     calamares-settings-debian || true
 
 mkdir -p /etc/calamares/branding/rizzoos
-touch /etc/calamares/branding/rizzoos/logo.png
-touch /etc/calamares/branding/rizzoos/welcome.png
+
+# Logo SVG RizzoOS
+cat > /etc/calamares/branding/rizzoos/logo.svg << 'LOGOSVG'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d4ff"/>
+      <stop offset="100%" style="stop-color:#00ff88"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="90" fill="#1a1a2e" stroke="url(#logoGrad)" stroke-width="8"/>
+  <text x="100" y="115" text-anchor="middle" font-family="Arial, sans-serif" font-size="45" font-weight="bold" fill="url(#logoGrad)">R</text>
+  <text x="100" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#ffffff">RizzoOS</text>
+</svg>
+LOGOSVG
+
+# Convertir en PNG
+convert -background none /etc/calamares/branding/rizzoos/logo.svg /etc/calamares/branding/rizzoos/logo.png 2>/dev/null || cp /etc/calamares/branding/rizzoos/logo.svg /etc/calamares/branding/rizzoos/logo.png
+
+# Welcome image
+cat > /etc/calamares/branding/rizzoos/welcome.svg << 'WELCOMESVG'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300">
+  <defs>
+    <linearGradient id="welGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d4ff"/>
+      <stop offset="100%" style="stop-color:#00ff88"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="300" fill="url(#welGrad)"/>
+  <text x="400" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="url(#textGrad)">RizzoOS</text>
+  <text x="400" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" fill="#ffffff" opacity="0.8">Bienvenue dans l'installation</text>
+  <text x="400" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#00d4ff">Par Arnaud</text>
+</svg>
+WELCOMESVG
+
+convert -background none /etc/calamares/branding/rizzoos/welcome.svg /etc/calamares/branding/rizzoos/welcome.png 2>/dev/null || cp /etc/calamares/branding/rizzoos/welcome.svg /etc/calamares/branding/rizzoos/welcome.png
 
 # ============================================
 # === NAVIGATEURS ===
@@ -173,7 +211,7 @@ class Browser(QMainWindow):
             QStatusBar { background-color: #16213e; color: #00d4ff; }
         """)
 
-    def add_tab(self, url="https://duckduckgo.com"):
+    def add_tab(self, url="file:///usr/share/rizzoos/homepage.html"):
         browser = QWebEngineView()
         browser.setUrl(QUrl(url))
         browser.urlChanged.connect(self.update_url)
@@ -231,6 +269,103 @@ Icon=web-browser
 Type=Application
 Categories=Network;WebBrowser;
 MENU
+
+# Page d'accueil Rizzo Navigator
+mkdir -p /usr/share/rizzoos
+cat > /usr/share/rizzoos/homepage.html << 'HOMEPAGE'
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>RizzoOS - Accueil</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { text-align: center; padding: 40px; }
+        h1 {
+            font-size: 4em;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .subtitle { color: #aaa; font-size: 1.2em; margin-bottom: 40px; }
+        .search-box {
+            background: rgba(255,255,255,0.1);
+            border-radius: 50px;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            width: 600px;
+            max-width: 90vw;
+            margin-bottom: 40px;
+        }
+        .search-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.1em;
+            outline: none;
+        }
+        .search-box button {
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            color: #1a1a2e;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .links { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .link {
+            background: rgba(255,255,255,0.1);
+            padding: 20px 30px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s;
+        }
+        .link:hover { background: rgba(0,212,255,0.3); transform: translateY(-5px); }
+        .link-icon { font-size: 2em; margin-bottom: 10px; }
+        .footer { position: fixed; bottom: 20px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 RizzoOS</h1>
+        <p class="subtitle">Par Arnaud</p>
+        <div class="search-box">
+            <input type="text" id="search" placeholder="Rechercher sur DuckDuckGo..." onkeypress="if(event.key==='Enter')search()">
+            <button onclick="search()">🔍</button>
+        </div>
+        <div class="links">
+            <a href="https://duckduckgo.com" class="link"><div class="link-icon">🦆</div>DuckDuckGo</a>
+            <a href="https://youtube.com" class="link"><div class="link-icon">▶️</div>YouTube</a>
+            <a href="https://github.com" class="link"><div class="link-icon">💻</div>GitHub</a>
+            <a href="https://wikipedia.org" class="link"><div class="link-icon">📚</div>Wikipedia</a>
+            <a href="http://localhost" class="link"><div class="link-icon">🖥️</div>Serveur Local</a>
+        </div>
+    </div>
+    <div class="footer">RizzoOS 1.0</div>
+    <script>
+        function search() {
+            const q = document.getElementById('search').value;
+            if(q) window.location.href = 'https://duckduckgo.com/?q=' + encodeURIComponent(q);
+        }
+    </script>
+</body>
+</html>
+HOMEPAGE
 
 # ============================================
 # === BUREAUTIQUE ===
@@ -424,6 +559,58 @@ apt-get install -y \
     keepassxc
 
 # ============================================
+# === PLYMOUTH (Écran de démarrage) ===
+# ============================================
+apt-get install -y plymouth plymouth-themes || true
+
+# Créer thème RizzoOS
+mkdir -p /usr/share/plymouth/themes/rizzoos
+
+cat > /usr/share/plymouth/themes/rizzoos/rizzoos.plymouth << 'PLYMOUTHCONF'
+[Plymouth Theme]
+Name=RizzoOS
+Description=RizzoOS Boot Screen
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/rizzoos
+ScriptFile=/usr/share/plymouth/themes/rizzoos/rizzoos.script
+PLYMOUTHCONF
+
+cat > /usr/share/plymouth/themes/rizzoos/rizzoos.script << 'PLYMOUTHSCRIPT'
+Window.SetBackgroundTopColor(0.10, 0.10, 0.18);
+Window.SetBackgroundBottomColor(0.09, 0.13, 0.24);
+
+logo.image = Image("logo.png");
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetX(Window.GetWidth() / 2 - logo.image.GetWidth() / 2);
+logo.sprite.SetY(Window.GetHeight() / 2 - logo.image.GetHeight() / 2);
+
+message_sprite = Sprite();
+message_sprite.SetPosition(Window.GetWidth() / 2, Window.GetHeight() - 50, 1);
+
+fun message_callback(text) {
+    my_image = Image.Text(text, 0, 0.83, 1);
+    message_sprite.SetImage(my_image);
+    message_sprite.SetX(Window.GetWidth() / 2 - my_image.GetWidth() / 2);
+}
+Plymouth.SetMessageFunction(message_callback);
+PLYMOUTHSCRIPT
+
+# Logo Plymouth
+cat > /usr/share/plymouth/themes/rizzoos/logo.svg << 'PLYLOGO'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100">
+  <text x="150" y="70" text-anchor="middle" font-family="Arial" font-size="60" font-weight="bold" fill="#00d4ff">RizzoOS</text>
+</svg>
+PLYLOGO
+
+convert -background none /usr/share/plymouth/themes/rizzoos/logo.svg /usr/share/plymouth/themes/rizzoos/logo.png 2>/dev/null || true
+
+# Activer le thème
+plymouth-set-default-theme rizzoos || true
+update-initramfs -u || true
+
+# ============================================
 # === AUDIO ===
 # ============================================
 apt-get install -y \
@@ -453,6 +640,50 @@ apt-get install -y \
     fonts-liberation \
     fonts-dejavu \
     fonts-ubuntu
+
+# ============================================
+# === FOND D'ÉCRAN RIZZOOS ===
+# ============================================
+mkdir -p /usr/share/wallpapers/RizzoOS/contents/images
+
+# Créer un fond d'écran SVG
+cat > /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.svg << 'WALLPAPER'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="50%" style="stop-color:#16213e"/>
+      <stop offset="100%" style="stop-color:#0f3460"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#00ff88;stop-opacity:0.1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <circle cx="1600" cy="200" r="300" fill="url(#glow)" opacity="0.5"/>
+  <circle cx="200" cy="900" r="400" fill="url(#glow)" opacity="0.3"/>
+  <text x="960" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#00d4ff">RizzoOS</text>
+  <text x="960" y="580" text-anchor="middle" font-family="Arial, sans-serif" font-size="40" fill="#ffffff" opacity="0.7">Par Arnaud</text>
+</svg>
+WALLPAPER
+
+# Convertir en PNG (si imagemagick disponible)
+convert /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.svg /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png 2>/dev/null || true
+
+# Metadata
+cat > /usr/share/wallpapers/RizzoOS/metadata.desktop << 'WALLMETA'
+[Desktop Entry]
+Name=RizzoOS
+X-KDE-PluginInfo-Name=RizzoOS
+WALLMETA
+
+# Config plasma pour utiliser ce fond
+mkdir -p /etc/skel/.config
+cat > /etc/skel/.config/plasma-org.kde.plasma.desktop-appletsrc << 'PLASMAWALL'
+[Containments][1][Wallpaper][org.kde.image][General]
+Image=/usr/share/wallpapers/RizzoOS/contents/images/1920x1080.svg
+PLASMAWALL
 
 # ============================================
 # === WAYDROID (Apps Android) ===
@@ -659,6 +890,65 @@ cat > /etc/motd << 'MOTD'
 MOTD
 
 # ============================================
+# === THÈME SDDM RIZZOOS ===
+# ============================================
+mkdir -p /usr/share/sddm/themes/rizzoos
+
+cat > /usr/share/sddm/themes/rizzoos/theme.conf << 'SDDMTHEME'
+[General]
+background=/usr/share/sddm/themes/rizzoos/background.svg
+SDDMTHEME
+
+cat > /usr/share/sddm/themes/rizzoos/background.svg << 'SDDMBG'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="sddmBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0f3460"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#sddmBg)"/>
+  <text x="960" y="200" text-anchor="middle" font-family="Arial" font-size="80" font-weight="bold" fill="#00d4ff">RizzoOS</text>
+</svg>
+SDDMBG
+
+cat > /usr/share/sddm/themes/rizzoos/Main.qml << 'SDDMQML'
+import QtQuick 2.0
+import SddmComponents 2.0
+
+Rectangle {
+    width: 1920
+    height: 1080
+    color: "#1a1a2e"
+    
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: 150
+        text: "RizzoOS"
+        font.pixelSize: 60
+        font.bold: true
+        color: "#00d4ff"
+    }
+    
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: 220
+        text: "Par Arnaud"
+        font.pixelSize: 20
+        color: "#888888"
+    }
+}
+SDDMQML
+
+cat > /usr/share/sddm/themes/rizzoos/metadata.desktop << 'SDDMMETA'
+[SddmGreeterTheme]
+Name=RizzoOS
+Description=RizzoOS Login Theme
+Author=Arnaud
+Version=1.0
+SDDMMETA
+
+# ============================================
 # === AUTOLOGIN SDDM ===
 # ============================================
 mkdir -p /etc/sddm.conf.d
@@ -668,7 +958,7 @@ User=live
 Session=plasma
 
 [Theme]
-Current=breeze
+Current=rizzoos
 SDDM
 
 # ============================================
