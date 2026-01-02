@@ -370,7 +370,7 @@ ln -sf /usr/share/phpmyadmin /var/www/html/phpmyadmin || true
 
 # Configurer MariaDB avec mot de passe root
 service mariadb start || true
-mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root'; FLUSH PRIVILEGES;" || true
+mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('root'); FLUSH PRIVILEGES;" || true
 service mariadb stop || true
 
 # IMPORTANT: Désactiver démarrage auto (évite kernel panic)
