@@ -668,7 +668,7 @@ cat > /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.svg << 'WALLPAPER'
 </svg>
 WALLPAPER
 
-# Convertir en PNG (si imagemagick disponible)
+# Convertir en PNG
 convert /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.svg /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png 2>/dev/null || true
 
 # Metadata
@@ -678,11 +678,35 @@ Name=RizzoOS
 X-KDE-PluginInfo-Name=RizzoOS
 WALLMETA
 
-# Config plasma pour utiliser ce fond
+# Définir comme fond d'écran par défaut pour KDE
 mkdir -p /etc/skel/.config
+cat >> /etc/skel/.config/kdeglobals << 'KDEWALL'
+
+[Wallpaper]
+defaultWallpaperTheme=RizzoOS
+KDEWALL
+
+# Config Plasma shell pour le fond
+mkdir -p /etc/skel/.config/plasmashellrc.d
+cat > /etc/skel/.config/plasmashellrc << 'PLASMACONF'
+[Wallpaper]
+defaultWallpaperTheme=RizzoOS
+PLASMACONF
+
+# Forcer le fond via config plasma desktop
 cat > /etc/skel/.config/plasma-org.kde.plasma.desktop-appletsrc << 'PLASMAWALL'
+[Containments][1]
+activityId=
+formfactor=0
+immutability=1
+lastScreen=0
+location=0
+plugin=org.kde.plasma.folder
+wallpaperplugin=org.kde.image
+
 [Containments][1][Wallpaper][org.kde.image][General]
-Image=/usr/share/wallpapers/RizzoOS/contents/images/1920x1080.svg
+Image=file:///usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png
+PreviewImage=file:///usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png
 PLASMAWALL
 
 # ============================================
@@ -1001,6 +1025,22 @@ cat > /home/live/.config/plasmarc << 'PLASMA'
 [Theme]
 name=breeze-dark
 PLASMA
+
+# Fond d'écran pour utilisateur live
+cat > /home/live/.config/plasma-org.kde.plasma.desktop-appletsrc << 'PLASMALIVE'
+[Containments][1]
+activityId=
+formfactor=0
+immutability=1
+lastScreen=0
+location=0
+plugin=org.kde.plasma.folder
+wallpaperplugin=org.kde.image
+
+[Containments][1][Wallpaper][org.kde.image][General]
+Image=file:///usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png
+PreviewImage=file:///usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png
+PLASMALIVE
 
 # ============================================
 # === RACCOURCIS BUREAU ===
