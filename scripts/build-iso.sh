@@ -646,30 +646,9 @@ apt-get install -y \
 # ============================================
 mkdir -p /usr/share/wallpapers/RizzoOS/contents/images
 
-# Créer un fond d'écran SVG
-cat > /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.svg << 'WALLPAPER'
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1a2e"/>
-      <stop offset="50%" style="stop-color:#16213e"/>
-      <stop offset="100%" style="stop-color:#0f3460"/>
-    </linearGradient>
-    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:0.3"/>
-      <stop offset="100%" style="stop-color:#00ff88;stop-opacity:0.1"/>
-    </linearGradient>
-  </defs>
-  <rect width="1920" height="1080" fill="url(#bg)"/>
-  <circle cx="1600" cy="200" r="300" fill="url(#glow)" opacity="0.5"/>
-  <circle cx="200" cy="900" r="400" fill="url(#glow)" opacity="0.3"/>
-  <text x="960" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#00d4ff">RizzoOS</text>
-  <text x="960" y="580" text-anchor="middle" font-family="Arial, sans-serif" font-size="40" fill="#ffffff" opacity="0.7">Par Arnaud</text>
-</svg>
-WALLPAPER
-
-# Convertir en PNG
-convert /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.svg /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png 2>/dev/null || true
+# Télécharger le fond d'écran personnalisé
+wget -O /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png \
+    "https://raw.githubusercontent.com/arnoldino06-spec/RizzoOS/main/assets/Fond_OS.png" || true
 
 # Metadata
 cat > /usr/share/wallpapers/RizzoOS/metadata.desktop << 'WALLMETA'
@@ -678,36 +657,13 @@ Name=RizzoOS
 X-KDE-PluginInfo-Name=RizzoOS
 WALLMETA
 
-# Définir comme fond d'écran par défaut pour KDE
-mkdir -p /etc/skel/.config
-cat >> /etc/skel/.config/kdeglobals << 'KDEWALL'
+# Remplacer le wallpaper par défaut de Breeze
+cp /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png /usr/share/wallpapers/Next/contents/images/1920x1080.png 2>/dev/null || true
+cp /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png /usr/share/wallpapers/Next/contents/images/3840x2160.png 2>/dev/null || true
 
-[Wallpaper]
-defaultWallpaperTheme=RizzoOS
-KDEWALL
-
-# Config Plasma shell pour le fond
-mkdir -p /etc/skel/.config/plasmashellrc.d
-cat > /etc/skel/.config/plasmashellrc << 'PLASMACONF'
-[Wallpaper]
-defaultWallpaperTheme=RizzoOS
-PLASMACONF
-
-# Forcer le fond via config plasma desktop
-cat > /etc/skel/.config/plasma-org.kde.plasma.desktop-appletsrc << 'PLASMAWALL'
-[Containments][1]
-activityId=
-formfactor=0
-immutability=1
-lastScreen=0
-location=0
-plugin=org.kde.plasma.folder
-wallpaperplugin=org.kde.image
-
-[Containments][1][Wallpaper][org.kde.image][General]
-Image=file:///usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png
-PreviewImage=file:///usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png
-PLASMAWALL
+# Fallback desktop-base
+mkdir -p /usr/share/desktop-base/active-theme/wallpaper/contents/images/
+cp /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png /usr/share/desktop-base/active-theme/wallpaper/contents/images/1920x1080.png 2>/dev/null || true
 
 # ============================================
 # === WAYDROID (Apps Android) ===
