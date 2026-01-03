@@ -20,6 +20,11 @@ sudo mount --bind /dev/pts "$WORK_DIR/chroot/dev/pts"
 sudo mount -t proc proc "$WORK_DIR/chroot/proc"
 sudo mount -t sysfs sysfs "$WORK_DIR/chroot/sys"
 
+# Télécharger le fond d'écran AVANT d'entrer dans le chroot
+sudo mkdir -p "$WORK_DIR/chroot/usr/share/wallpapers/RizzoOS/contents/images"
+sudo wget -O "$WORK_DIR/chroot/usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png" \
+    "https://raw.githubusercontent.com/arnoldino06-spec/RizzoOS/main/assets/Fond_OS.png" || true
+    
 sudo chroot "$WORK_DIR/chroot" /bin/bash << 'CHROOT'
 export DEBIAN_FRONTEND=noninteractive
 
@@ -644,11 +649,7 @@ apt-get install -y \
 # ============================================
 # === FOND D'ÉCRAN RIZZOOS ===
 # ============================================
-mkdir -p /usr/share/wallpapers/RizzoOS/contents/images
-
-# Télécharger le fond d'écran personnalisé
-wget -O /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png \
-    "https://raw.githubusercontent.com/arnoldino06-spec/RizzoOS/main/assets/Fond_OS.png" || true
+# (Image déjà téléchargée avant le chroot)
 
 # Metadata
 cat > /usr/share/wallpapers/RizzoOS/metadata.desktop << 'WALLMETA'
@@ -657,13 +658,32 @@ Name=RizzoOS
 X-KDE-PluginInfo-Name=RizzoOS
 WALLMETA
 
-# Remplacer le wallpaper par défaut de Breeze
-cp /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png /usr/share/wallpapers/Next/contents/images/1920x1080.png 2>/dev/null || true
-cp /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png /usr/share/wallpapers/Next/contents/images/3840x2160.png 2>/dev/null || true
+# FORCER le wallpaper en remplaçant TOUS les défauts
+rm -rf /usr/share/wallpapers/Next 2>/dev/null || true
+mkdir -p /usr/share/wallpapers/Next/contents/images
+cp /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png /usr/share/wallpapers/Next/contents/images/1920x1080.png || true
+cp /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png /usr/share/wallpapers/Next/contents/images/3840x2160.png || true
+cp /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png /usr/share/wallpapers/Next/contents/images/5120x2880.png || true
 
-# Fallback desktop-base
+cat > /usr/share/wallpapers/Next/metadata.desktop << 'NEXTMETA'
+[Desktop Entry]
+Name=Next
+X-KDE-PluginInfo-Name=Next
+NEXTMETA
+
+# Remplacer aussi desktop-base
 mkdir -p /usr/share/desktop-base/active-theme/wallpaper/contents/images/
 cp /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png /usr/share/desktop-base/active-theme/wallpaper/contents/images/1920x1080.png 2>/dev/null || true
+
+# Forcer dans la config Plasma par défaut
+mkdir -p /usr/share/plasma/look-and-feel/org.kde.breezedark.desktop/contents/defaults
+cat > /usr/share/plasma/look-and-feel/org.kde.breezedark.desktop/contents/defaults/wallpaperTheme << 'PLASMADEF'
+[Wallpaper]
+defaultWallpaperTheme=RizzoOS
+defaultFileSuffix=.png
+defaultWidth=1920
+defaultHeight=1080
+PLASMADEF
 
 # ============================================
 # === WAYDROID (Apps Android) ===
@@ -874,48 +894,28 @@ MOTD
 # ============================================
 mkdir -p /usr/share/sddm/themes/rizzoos
 
+# Télécharger le fond pour SDDM aussi
+cp /usr/share/wallpapers/RizzoOS/contents/images/1920x1080.png /usr/share/sddm/themes/rizzoos/background.png 2>/dev/null || true
+
 cat > /usr/share/sddm/themes/rizzoos/theme.conf << 'SDDMTHEME'
 [General]
-background=/usr/share/sddm/themes/rizzoos/background.svg
+background=/usr/share/sddm/themes/rizzoos/background.png
+type=image
 SDDMTHEME
-
-cat > /usr/share/sddm/themes/rizzoos/background.svg << 'SDDMBG'
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
-  <defs>
-    <linearGradient id="sddmBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1a2e"/>
-      <stop offset="100%" style="stop-color:#0f3460"/>
-    </linearGradient>
-  </defs>
-  <rect width="1920" height="1080" fill="url(#sddmBg)"/>
-  <text x="960" y="200" text-anchor="middle" font-family="Arial" font-size="80" font-weight="bold" fill="#00d4ff">RizzoOS</text>
-</svg>
-SDDMBG
 
 cat > /usr/share/sddm/themes/rizzoos/Main.qml << 'SDDMQML'
 import QtQuick 2.0
 import SddmComponents 2.0
 
 Rectangle {
+    id: root
     width: 1920
     height: 1080
-    color: "#1a1a2e"
     
-    Text {
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: 150
-        text: "RizzoOS"
-        font.pixelSize: 60
-        font.bold: true
-        color: "#00d4ff"
-    }
-    
-    Text {
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: 220
-        text: "Par Arnaud"
-        font.pixelSize: 20
-        color: "#888888"
+    Image {
+        anchors.fill: parent
+        source: "background.png"
+        fillMode: Image.PreserveAspectCrop
     }
 }
 SDDMQML
@@ -927,7 +927,6 @@ Description=RizzoOS Login Theme
 Author=Arnaud
 Version=1.0
 SDDMMETA
-
 # ============================================
 # === AUTOLOGIN SDDM ===
 # ============================================
